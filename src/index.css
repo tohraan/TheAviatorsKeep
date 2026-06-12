@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Backgrounds */
+    --bg-base: #0A0C10;
+    --bg-surface: #111318;
+    --bg-elevated: #1A1D24;
+    --bg-input: #15181F;
+
+    /* Borders */
+    --border-subtle: #1E2230;
+    --border-default: #2A2F3E;
+    --border-strong: #3D4455;
+
+    /* Brand Accent */
+    --accent-primary: #3B7FE8;
+    --accent-hover: #5292F0;
+    --accent-muted: #1E3A6E;
+
+    /* Status Colors */
+    --status-green: #22C55E;
+    --status-yellow: #EAB308;
+    --status-red: #EF4444;
+    --status-orange: #F97316;
+    --status-purple: #A855F7;
+    --status-blue: #3B7FE8;
+
+    /* Text */
+    --text-primary: #F1F3F7;
+    --text-secondary: #8B92A8;
+    --text-muted: #4A5068;
+    --text-accent: #3B7FE8;
+
+    /* shadcn/ui standard color mapping (HSL values) */
+    --background: 220 23% 5%;
+    --foreground: 223 18% 93%;
+
+    --card: 222 17% 8%;
+    --card-foreground: 223 18% 93%;
+
+    --popover: 220 17% 12%;
+    --popover-foreground: 223 18% 93%;
+
+    --primary: 216 79% 57%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 220 17% 12%;
+    --secondary-foreground: 223 18% 93%;
+
+    --muted: 220 17% 12%;
+    --muted-foreground: 225 12% 60%;
+
+    --accent: 218 57% 27%;
+    --accent-foreground: 223 18% 93%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 224 19% 20%;
+    --input: 220 19% 10%;
+    --ring: 216 79% 57%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
