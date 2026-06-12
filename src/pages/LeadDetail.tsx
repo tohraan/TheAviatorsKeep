@@ -18,10 +18,12 @@ import {
   Plane,
   Plus,
   Send,
-  HelpCircle
+  HelpCircle,
+  X
 } from 'lucide-react'
 import { useLeadsStore } from '@/stores/leadsStore'
-import { leadSchema, type LeadFormValues } from '@/lib/schemas'
+import { useOrdersStore } from '@/stores/ordersStore'
+import { leadSchema, orderSchema, type LeadFormValues, type OrderFormValues } from '@/lib/schemas'
 import type { Lead, LeadNote } from '@/types'
 import { formatGST, formatLocalDate, cn } from '@/lib/utils'
 
@@ -106,7 +108,10 @@ export default function LeadDetail() {
     addNote
   } = useLeadsStore()
 
+  const { addOrder } = useOrdersStore()
+
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false)
+  const [isOrderSheetOpen, setIsOrderSheetOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [noteType, setNoteType] = useState<LeadNote['type']>('general')
   const [noteText, setNoteText] = useState('')
@@ -170,6 +175,46 @@ export default function LeadDetail() {
         setIsEditSheetOpen(false)
       } catch (e) {
         // Handled by store
+      }
+    }
+  }
+
+  // React Hook Form for Order Registration
+  const {
+    register: registerOrder,
+    handleSubmit: handleOrderSubmit,
+    setValue: setOrderValue,
+    control: orderControl,
+    reset: resetOrder,
+    formState: { errors: orderErrors, isSubmitting: isOrderSubmitting }
+  } = useForm<OrderFormValues>({
+    resolver: zodResolver(orderSchema),
+  })
+
+  const handleOpenCreateOrder = () => {
+    if (selectedLead) {
+      resetOrder({
+        lead_id: selectedLead.id,
+        frame_type: selectedLead.frame_type || 'standard',
+        airline: selectedLead.plane_interest || '',
+        plane_model: '',
+        plaque_color: 'Gold',
+        price_aed: selectedLead.frame_type === 'custom' ? 300 : 249,
+        custom_notes: selectedLead.notes || ''
+      })
+      setIsOrderSheetOpen(true)
+    }
+  }
+
+  const onCreateOrderSubmit = async (data: OrderFormValues) => {
+    if (id) {
+      try {
+        await addOrder(data as any, id)
+        setIsOrderSheetOpen(false)
+        await fetchLeadById(id)
+        await fetchNotes(id)
+      } catch (e) {
+        // handled
       }
     }
   }
@@ -320,11 +365,12 @@ export default function LeadDetail() {
               </Button>
             </Link>
           ) : (
-            <Link to="/orders">
-              <Button className="bg-accent-primary hover:bg-accent-hover text-text-primary text-xs font-ui">
-                <Plus className="h-4 w-4 mr-2" /> Create Order
-              </Button>
-            </Link>
+            <Button
+              onClick={handleOpenCreateOrder}
+              className="bg-accent-primary hover:bg-accent-hover text-text-primary text-xs font-ui"
+            >
+              <Plus className="h-4 w-4 mr-2" /> Create Order
+            </Button>
           )}
         </div>
       </div>
@@ -829,6 +875,146 @@ export default function LeadDetail() {
                 className="bg-accent-primary hover:bg-accent-hover text-text-primary text-xs font-semibold"
               >
                 {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </form>
+        </SheetContent>
+      </Sheet>
+
+      {/* Add Order Slide-out Sheet */}
+      <Sheet open={isOrderSheetOpen} onOpenChange={setIsOrderSheetOpen}>
+        <SheetContent className="bg-bg-surface border-l border-border-default text-text-primary overflow-y-auto w-full sm:max-w-md">
+          <SheetHeader className="pb-4 border-b border-border-subtle">
+            <SheetTitle className="font-ui text-lg text-text-primary flex items-center justify-between">
+              <span>Register Order for Lead</span>
+              <button
+                onClick={() => setIsOrderSheetOpen(false)}
+                className="text-text-secondary hover:text-text-primary rounded-md p-1 hover:bg-bg-elevated"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </SheetTitle>
+            <SheetDescription className="text-xs text-text-secondary font-body">
+              This initiates production checksheets and payment milestones.
+            </SheetDescription>
+          </SheetHeader>
+
+          <form onSubmit={handleOrderSubmit(onCreateOrderSubmit)} className="space-y-4 py-4 font-ui text-xs">
+            {/* Airline */}
+            <div className="space-y-1">
+              <Label htmlFor="order_airline" className="text-text-secondary uppercase tracking-wider text-[10px]">Airline *</Label>
+              <Input
+                id="order_airline"
+                placeholder="Emirates, Etihad, Qatar, etc."
+                {...registerOrder('airline')}
+                className="bg-bg-input border-border-default text-xs"
+              />
+              {orderErrors.airline && (
+                <p className="text-status-red text-[11px] font-body mt-0.5">{orderErrors.airline.message}</p>
+              )}
+            </div>
+
+            {/* Model & Plaque Color */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="order_model" className="text-text-secondary uppercase tracking-wider text-[10px]">Plane Model</Label>
+                <Input
+                  id="order_model"
+                  placeholder="e.g. B777 / A380"
+                  {...registerOrder('plane_model')}
+                  className="bg-bg-input border-border-default text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="order_plaque" className="text-text-secondary uppercase tracking-wider text-[10px]">Plaque Engraving Color</Label>
+                <Controller
+                  control={orderControl}
+                  name="plaque_color"
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value || 'Gold'}>
+                      <SelectTrigger className="bg-bg-input border-border-default text-xs">
+                        <SelectValue placeholder="Plaque Color" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-bg-elevated border-border-default text-text-primary">
+                        <SelectItem value="Gold">Gold Engraving</SelectItem>
+                        <SelectItem value="Silver">Silver Engraving</SelectItem>
+                        <SelectItem value="Black">Black Engraving</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Frame Variant & Price */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="order_frame" className="text-text-secondary uppercase tracking-wider text-[10px]">Frame Variant *</Label>
+                <Controller
+                  control={orderControl}
+                  name="frame_type"
+                  render={({ field }) => (
+                    <Select
+                      onValueChange={(val) => {
+                        field.onChange(val)
+                        // Auto price sets
+                        setOrderValue('price_aed', val === 'custom' ? 300 : 249)
+                      }}
+                      value={field.value}
+                    >
+                      <SelectTrigger className="bg-bg-input border-border-default text-xs">
+                        <SelectValue placeholder="Frame Variant" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-bg-elevated border-border-default text-text-primary">
+                        <SelectItem value="standard">Standard (249 AED)</SelectItem>
+                        <SelectItem value="custom">Custom (300 AED)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="order_price" className="text-text-secondary uppercase tracking-wider text-[10px]">Price (AED) *</Label>
+                <Input
+                  id="order_price"
+                  type="number"
+                  {...registerOrder('price_aed')}
+                  className="bg-bg-input border-border-default text-xs font-semibold text-text-primary"
+                />
+                {orderErrors.price_aed && (
+                  <p className="text-status-red text-[11px] font-body mt-0.5">{orderErrors.price_aed.message}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Custom Notes */}
+            <div className="space-y-1">
+              <Label htmlFor="order_notes" className="text-text-secondary uppercase tracking-wider text-[10px]">Custom Engraving / Notes</Label>
+              <Textarea
+                id="order_notes"
+                placeholder="Include custom flight details, plaque text, or frame extension comments..."
+                rows={3}
+                {...registerOrder('custom_notes')}
+                className="bg-bg-input border-border-default text-xs font-body"
+              />
+            </div>
+
+            {/* Buttons */}
+            <div className="flex justify-end gap-2 pt-4 border-t border-border-subtle">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setIsOrderSheetOpen(false)}
+                className="text-text-secondary hover:text-text-primary text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isOrderSubmitting}
+                className="bg-accent-primary hover:bg-accent-hover text-text-primary text-xs font-semibold"
+              >
+                {isOrderSubmitting ? 'Registering...' : 'Confirm Order'}
               </Button>
             </div>
           </form>

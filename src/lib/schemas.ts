@@ -30,3 +30,18 @@ export const leadSchema = z.object({
 })
 
 export type LeadFormValues = z.infer<typeof leadSchema>
+
+export const orderSchema = z.object({
+  lead_id: z.string().optional().nullable(),
+  frame_type: z.enum(['standard', 'custom'], {
+    errorMap: () => ({ message: 'Please select a frame variant' })
+  }),
+  airline: z.string().min(1, 'Airline is required'),
+  plane_model: z.string().optional().nullable().transform(val => val === '' ? null : val),
+  plaque_color: z.string().optional().nullable().transform(val => val === '' ? null : val),
+  price_aed: z.coerce.number().min(0, 'Price must be a positive number'),
+  custom_notes: z.string().optional().nullable().transform(val => val === '' ? null : val),
+})
+
+export type OrderFormValues = z.infer<typeof orderSchema>
+
