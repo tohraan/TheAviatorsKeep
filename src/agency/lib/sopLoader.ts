@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase'
-import { AgentName, SOP } from '../types/agency.types'
+import type { AgentName, SOP } from '../types/agency.types'
 
 export async function getAgentSOP(agentName: AgentName): Promise<SOP> {
   const { data, error } = await supabase

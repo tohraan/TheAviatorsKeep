@@ -22,6 +22,7 @@ export interface ContentSession {
   session_label?: string
   week_of?: string
   text_context?: string
+  history_context?: string
   screenshot_urls?: string[]
   cmo_output?: object
   content_manager_output?: object

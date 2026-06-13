@@ -1,6 +1,6 @@
 import { getAgencyModel } from '../lib/gemini'
 import { getAgentSOP } from '../lib/sopLoader'
-import { AdsSession } from '../types/agency.types'
+import type { AdsSession } from '../types/agency.types'
 
 export async function runAdCopywriterAgent(session: AdsSession) {
   const sop = await getAgentSOP('ad_copywriter')

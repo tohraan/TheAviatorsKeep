@@ -1,7 +1,7 @@
 import { getAgencyModel } from '../lib/gemini'
 import { getAgentSOP } from '../lib/sopLoader'
-import { AdsSession } from '../types/agency.types'
-import { Part } from '@google/generative-ai'
+import type { AdsSession } from '../types/agency.types'
+import type { Part } from '@google/generative-ai'
 
 export async function runAdAnalystAgent(session: AdsSession) {
   const sop = await getAgentSOP('ad_analyst')

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '../../components/ui/card'
-import { Button } from '../../components/ui/button'
 import { useAgencyStore } from '../store/agencyStore'
 import { seedSOPsIfEmpty } from '../lib/seedSOPs'
 import { Rocket, Megaphone, Settings, Users, ArrowRight, BrainCircuit } from 'lucide-react'

@@ -1,4 +1,4 @@
-import { SOP } from '../types/agency.types'
+import type { SOP } from '../types/agency.types'
 
 export const DEFAULT_SOPS: Omit<SOP, 'id'>[] = [
   {

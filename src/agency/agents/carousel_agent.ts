@@ -1,6 +1,6 @@
 import { getAgencyModel } from '../lib/gemini'
 import { getAgentSOP } from '../lib/sopLoader'
-import { ContentSession } from '../types/agency.types'
+import type { ContentSession } from '../types/agency.types'
 
 export async function runCarouselAgent(session: ContentSession) {
   const sop = await getAgentSOP('carousel_agent')

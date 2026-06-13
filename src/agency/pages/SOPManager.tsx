@@ -6,7 +6,7 @@ import { Textarea } from '../../components/ui/textarea'
 import { useAgencyStore } from '../store/agencyStore'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
 import { Settings, Save, RotateCcw } from 'lucide-react'
-import { SOP } from '../types/agency.types'
+import type { SOP } from '../types/agency.types'
 import { DEFAULT_SOPS } from '../lib/defaultSOPs'
 
 export default function SOPManager() {

@@ -40,7 +40,7 @@ export default function ContentBranch() {
       text_context: textContext,
       history_context: historyContext,
       screenshot_urls: [] // Mocking screenshots for v1
-    })
+    } as any)
 
     if (id) {
       await startContentSession(id)

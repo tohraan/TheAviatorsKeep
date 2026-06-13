@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '../../lib/supabase'
-import { ContentSession, AdsSession, SOP } from '../types/agency.types'
+import type { ContentSession, AdsSession, SOP } from '../types/agency.types'
 import { runContentPipeline, runAdsPipeline } from '../agents/orchestrator'
 
 interface AgencyState {

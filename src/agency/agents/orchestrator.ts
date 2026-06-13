@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase'
-import { ContentSession, AdsSession } from '../types/agency.types'
+import type { ContentSession, AdsSession } from '../types/agency.types'
 import { runCMOAgent } from './cmo'
 import { runContentManagerAgent } from './content_manager'
 import { runReelAgent } from './reel_agent'
