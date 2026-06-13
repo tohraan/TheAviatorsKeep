@@ -23,7 +23,7 @@ interface SidebarItem {
 }
 
 export default function Layout() {
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(window.innerWidth >= 768)
   const location = useLocation()
 
   const navItems: SidebarItem[] = [
@@ -33,17 +33,24 @@ export default function Layout() {
     { name: 'Inventory', path: '/inventory', icon: Layers },
     { name: 'Finance', path: '/finance', icon: Coins },
     { name: 'Content', path: '/content', icon: Calendar },
-    { name: 'Agency', path: '/content/agency', icon: Cpu },
     { name: 'Settings', path: '/settings', icon: Settings },
   ]
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-bg-base text-text-primary">
+      {/* Mobile Overlay */}
+      {isExpanded && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsExpanded(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
         className={cn(
-          "relative flex flex-col border-r border-border-default bg-bg-surface transition-all duration-200 ease-out z-10",
-          isExpanded ? "w-[220px]" : "w-[64px]"
+          "fixed inset-y-0 left-0 md:relative flex flex-col h-full border-r border-border-default bg-bg-surface transition-all duration-200 ease-out z-50 md:z-10",
+          isExpanded ? "translate-x-0 w-[220px]" : "-translate-x-full md:translate-x-0 md:w-[64px]"
         )}
       >
         {/* Sidebar Header */}
@@ -65,7 +72,7 @@ export default function Layout() {
 
         {/* Sidebar Items */}
         <nav className="flex-1 space-y-1 py-4 px-2 overflow-y-auto">
-          {navItems.map((item) => {
+          {navItems.filter(item => !item.path.startsWith('/agency')).map((item) => {
             const isActive =
               item.path === '/'
                 ? location.pathname === '/'
@@ -75,11 +82,58 @@ export default function Layout() {
               <NavLink
                 key={item.name}
                 to={item.path}
+                onClick={() => {
+                  if (window.innerWidth < 768) setIsExpanded(false)
+                }}
                 className={({ isActive: linkActive }) =>
                   cn(
                     "flex items-center rounded-md px-3 py-2 text-sm font-ui transition-colors relative group",
                     (isActive || linkActive)
                       ? "bg-accent-muted text-text-primary border-l-2 border-accent-primary pl-[10px]"
+                      : "text-text-secondary hover:bg-bg-elevated hover:text-text-primary"
+                  )
+                }
+              >
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                {isExpanded ? (
+                  <span className="ml-3 transition-opacity duration-200">{item.name}</span>
+                ) : (
+                  <span className="absolute left-14 hidden group-hover:block bg-bg-elevated border border-border-default text-xs rounded-md px-2 py-1 whitespace-nowrap z-20">
+                    {item.name}
+                  </span>
+                )}
+              </NavLink>
+            )
+          })}
+
+          {isExpanded && (
+            <div className="px-3 py-2 text-[10px] font-ui font-bold text-text-muted uppercase tracking-widest mt-4">
+              Media Agency
+            </div>
+          )}
+
+          {[
+            { name: 'Agency Home', path: '/agency', icon: Cpu, exact: true },
+            { name: 'Content Branch', path: '/agency/content', icon: Calendar },
+            { name: 'Ads Branch', path: '/agency/ads', icon: Layers },
+            { name: 'SOP Manager', path: '/agency/sops', icon: Settings },
+          ].map((item) => {
+            const isActive = item.exact 
+              ? location.pathname === item.path
+              : location.pathname.startsWith(item.path)
+
+            return (
+              <NavLink
+                key={item.name}
+                to={item.path}
+                onClick={() => {
+                  if (window.innerWidth < 768) setIsExpanded(false)
+                }}
+                className={({ isActive: linkActive }) =>
+                  cn(
+                    "flex items-center rounded-md px-3 py-2 text-sm font-ui transition-colors relative group",
+                    (isActive || linkActive)
+                      ? "bg-status-purple/10 text-status-purple border-l-2 border-status-purple pl-[10px]"
                       : "text-text-secondary hover:bg-bg-elevated hover:text-text-primary"
                   )
                 }

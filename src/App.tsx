@@ -8,7 +8,12 @@ import Orders from './pages/Orders'
 import OrderDetail from './pages/OrderDetail'
 import Finance from './pages/Finance'
 import Content from './pages/Content'
-import Agency from './pages/Agency'
+import AgencyDashboard from './agency/pages/AgencyDashboard'
+import ContentBranch from './agency/pages/ContentBranch'
+import ContentSessionDetail from './agency/pages/ContentSessionDetail'
+import AdsBranch from './agency/pages/AdsBranch'
+import AdsSessionDetail from './agency/pages/AdsSessionDetail'
+import SOPManager from './agency/pages/SOPManager'
 import Inventory from './pages/Inventory'
 import Settings from './pages/Settings'
 
@@ -46,8 +51,28 @@ const router = createBrowserRouter([
         element: <Content />,
       },
       {
-        path: '/content/agency',
-        element: <Agency />,
+        path: '/agency',
+        element: <AgencyDashboard />,
+      },
+      {
+        path: '/agency/content',
+        element: <ContentBranch />,
+      },
+      {
+        path: '/agency/content/:id',
+        element: <ContentSessionDetail />,
+      },
+      {
+        path: '/agency/ads',
+        element: <AdsBranch />,
+      },
+      {
+        path: '/agency/ads/:id',
+        element: <AdsSessionDetail />,
+      },
+      {
+        path: '/agency/sops',
+        element: <SOPManager />,
       },
       {
         path: '/inventory',
