@@ -1,5 +1,6 @@
 import { getAgencyModel } from '../lib/gemini'
 import { getAgentSOP } from '../lib/sopLoader'
+import { supabase } from '../../lib/supabase'
 import type { AdsSession } from '../types/agency.types'
 import type { Part } from '@google/generative-ai'
 
@@ -42,12 +43,35 @@ export async function runAdAnalystAgent(session: AdsSession) {
   const parts: Part[] = [{ text: promptText }]
 
   // Add screenshots to context if available
-  // In a real implementation, you might need to fetch the image and provide the base64 data to Gemini.
-  // For now, if there are urls, we just inform the agent (or if we were doing true multimodal, pass InlineDataPart).
   if (session.screenshot_urls && session.screenshot_urls.length > 0) {
-    parts.push({
-      text: `\nNote: The user has provided screenshot URLs, but in this execution environment they are handled separately. Analyze the provided text context thoroughly.`
-    })
+    for (const path of session.screenshot_urls) {
+      try {
+        const { data, error } = await supabase.storage.from('agency-uploads').download(path)
+        if (data) {
+          const base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              if (reader.result) {
+                resolve((reader.result as string).split(',')[1])
+              } else {
+                reject(new Error('Failed to convert image to base64'))
+              }
+            }
+            reader.onerror = reject
+            reader.readAsDataURL(data)
+          })
+
+          parts.push({
+            inlineData: {
+              data: base64,
+              mimeType: data.type
+            }
+          })
+        }
+      } catch (err) {
+        console.error('Failed to load screenshot:', err)
+      }
+    }
   }
 
   try {

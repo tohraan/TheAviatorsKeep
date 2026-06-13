@@ -1,6 +1,8 @@
 import { getAgencyModel } from '../lib/gemini'
 import { getAgentSOP } from '../lib/sopLoader'
+import { supabase } from '../../lib/supabase'
 import type { ContentSession } from '../types/agency.types'
+import type { Part } from '@google/generative-ai'
 
 export async function runCMOAgent(session: ContentSession) {
   const sop = await getAgentSOP('cmo')
@@ -45,10 +47,41 @@ export async function runCMOAgent(session: ContentSession) {
   `
 
   try {
-    // If we had screenshot_urls, we'd add them here. For the CMO, typically text context is primary, 
-    // but multimodal is possible.
+    const parts: Part[] = [{ text: prompt }]
+
+    if (session.screenshot_urls && session.screenshot_urls.length > 0) {
+      for (const path of session.screenshot_urls) {
+        try {
+          const { data, error } = await supabase.storage.from('agency-uploads').download(path)
+          if (data) {
+            const base64 = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader()
+              reader.onloadend = () => {
+                if (reader.result) {
+                  resolve((reader.result as string).split(',')[1])
+                } else {
+                  reject(new Error('Failed to convert image to base64'))
+                }
+              }
+              reader.onerror = reject
+              reader.readAsDataURL(data)
+            })
+
+            parts.push({
+              inlineData: {
+                data: base64,
+                mimeType: data.type
+              }
+            })
+          }
+        } catch (err) {
+          console.error('Failed to load screenshot:', err)
+        }
+      }
+    }
+
     const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      contents: [{ role: 'user', parts }],
       systemInstruction,
     })
 

@@ -7,7 +7,8 @@ import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
 import { useAgencyStore } from '../store/agencyStore'
 import { formatLocalDate } from '../../lib/utils'
-import { Megaphone, ImagePlus, FileClock, ChevronRight } from 'lucide-react'
+import { Megaphone, ImagePlus, FileClock, ChevronRight, X } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
 
 export default function AdsBranch() {
   const navigate = useNavigate()
@@ -17,6 +18,7 @@ export default function AdsBranch() {
   const [periodStart, setPeriodStart] = useState('')
   const [periodEnd, setPeriodEnd] = useState('')
   const [textContext, setTextContext] = useState('')
+  const [screenshots, setScreenshots] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -31,12 +33,21 @@ export default function AdsBranch() {
 
     setIsSubmitting(true)
 
+    const uploadedPaths: string[] = []
+    if (screenshots.length > 0) {
+      for (const file of screenshots) {
+        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
+        const { data } = await supabase.storage.from('agency-uploads').upload(fileName, file)
+        if (data) uploadedPaths.push(data.path)
+      }
+    }
+
     const id = await createAdsSession({
       session_label: sessionLabel,
       period_start: periodStart,
       period_end: periodEnd,
       text_context: textContext,
-      screenshot_urls: [] // Mocking screenshots for v1
+      screenshot_urls: uploadedPaths
     })
 
     if (id) {
@@ -45,6 +56,17 @@ export default function AdsBranch() {
     }
 
     setIsSubmitting(false)
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files)
+      setScreenshots(prev => [...prev, ...newFiles].slice(0, 4))
+    }
+  }
+
+  const removeScreenshot = (index: number) => {
+    setScreenshots(prev => prev.filter((_, i) => i !== index))
   }
 
   return (
@@ -118,10 +140,24 @@ export default function AdsBranch() {
               </div>
 
               <div className="space-y-4">
-                <div className="border border-border-default bg-bg-elevated rounded-md p-3 h-full flex flex-col items-center justify-center cursor-pointer hover:bg-bg-surface transition-colors border-dashed min-h-[100px]">
+                <label className="border border-border-default bg-bg-elevated rounded-md p-3 h-full flex flex-col items-center justify-center cursor-pointer hover:bg-bg-surface transition-colors border-dashed min-h-[100px] relative">
+                  <input type="file" multiple accept="image/*" className="hidden" onChange={handleFileChange} />
                   <ImagePlus className="h-5 w-5 text-text-muted mb-1" />
-                  <span className="text-[10px] font-ui text-text-secondary">Upload Ads Manager Screenshots</span>
-                </div>
+                  <span className="text-[10px] font-ui text-text-secondary">Upload Screenshots (Max 4)</span>
+                </label>
+                
+                {screenshots.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {screenshots.map((file, i) => (
+                      <div key={i} className="relative bg-bg-elevated border border-border-default rounded p-2 flex items-center justify-between group">
+                        <span className="text-[9px] font-body text-text-primary truncate w-3/4">{file.name}</span>
+                        <button onClick={() => removeScreenshot(i)} className="text-text-muted hover:text-status-red">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
