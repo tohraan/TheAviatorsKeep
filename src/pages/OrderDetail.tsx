@@ -15,11 +15,13 @@ import {
   Edit2,
   Calendar,
   Save,
-  HelpCircle
+  HelpCircle,
+  ChevronRight
 } from 'lucide-react'
 import { useOrdersStore } from '@/stores/ordersStore'
 import { formatGST, formatLocalDate, cn } from '@/lib/utils'
-import { OrderStatus, Material } from '@/types'
+import { supabase } from '@/lib/supabase'
+import type { OrderStatus, Material } from '@/types'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -74,6 +76,10 @@ export default function OrderDetail() {
   const [trackingNumber, setTrackingNumber] = useState('')
   const [isSavingShipping, setIsSavingShipping] = useState(false)
 
+  // Details inputs
+  const [deliveredDate, setDeliveredDate] = useState<string>('')
+  const [isSavingDetails, setIsSavingDetails] = useState(false)
+
   // Material notes inputs (local states mapped by material ID)
   const [materialNotes, setMaterialNotes] = useState<Record<string, string>>({})
   const [savingMaterialId, setSavingMaterialId] = useState<string | null>(null)
@@ -90,6 +96,12 @@ export default function OrderDetail() {
       setShippingFee(selectedOrder.shipping_fee_aed ? selectedOrder.shipping_fee_aed.toString() : '')
       setCourier(selectedOrder.courier || '')
       setTrackingNumber(selectedOrder.tracking_number || '')
+      
+      setDeliveredDate(
+        selectedOrder.delivered_at 
+          ? formatGST(selectedOrder.delivered_at, 'yyyy-MM-dd') 
+          : ''
+      )
 
       const notesMap: Record<string, string> = {}
       selectedOrder.materials.forEach((m) => {
@@ -102,6 +114,25 @@ export default function OrderDetail() {
   const handleStatusChange = async (val: string) => {
     if (id) {
       await updateOrderStatus(id, val as OrderStatus)
+    }
+  }
+
+  const handleSaveDetails = async () => {
+    if (id) {
+      setIsSavingDetails(true)
+      try {
+        let deliveredAtValue = null
+        if (deliveredDate) {
+          const local = new Date(`${deliveredDate}T00:00:00`);
+          local.setHours(local.getHours() - 4); // Undo GST
+          deliveredAtValue = local.toISOString()
+        }
+        await updateOrder(id, { delivered_at: deliveredAtValue })
+      } catch (e) {
+        // handled
+      } finally {
+        setIsSavingDetails(false)
+      }
     }
   }
 
@@ -187,12 +218,12 @@ export default function OrderDetail() {
   // Status Strip Steps definition
   const orderStatus = selectedOrder.order_status
   const steps = [
-    { label: 'Booking', active: selectedOrder.booking_paid, current: orderStatus === 'booking_confirmed' },
-    { label: 'Production', active: orderStatus !== 'pending' && orderStatus !== 'booking_confirmed', current: orderStatus === 'in_production' },
-    { label: 'Ready', active: orderStatus === 'ready' || orderStatus === 'awaiting_shipping_payment' || orderStatus === 'shipped' || orderStatus === 'delivered', current: orderStatus === 'ready' },
-    { label: 'Balance Paid', active: selectedOrder.balance_paid, current: orderStatus === 'awaiting_shipping_payment' },
-    { label: 'Shipped', active: orderStatus === 'shipped' || orderStatus === 'delivered', current: orderStatus === 'shipped' },
-    { label: 'Delivered', active: orderStatus === 'delivered', current: orderStatus === 'delivered' }
+    { label: 'Booking', active: selectedOrder.booking_paid, current: orderStatus === 'booking_confirmed', statusValue: 'booking_confirmed' },
+    { label: 'Production', active: orderStatus !== 'pending' && orderStatus !== 'booking_confirmed', current: orderStatus === 'in_production', statusValue: 'in_production' },
+    { label: 'Ready', active: orderStatus === 'ready' || orderStatus === 'awaiting_shipping_payment' || orderStatus === 'shipped' || orderStatus === 'delivered', current: orderStatus === 'ready', statusValue: 'ready' },
+    { label: 'Balance Paid', active: selectedOrder.balance_paid, current: orderStatus === 'awaiting_shipping_payment', statusValue: 'awaiting_shipping_payment' },
+    { label: 'Shipped', active: orderStatus === 'shipped' || orderStatus === 'delivered', current: orderStatus === 'shipped', statusValue: 'shipped' },
+    { label: 'Delivered', active: orderStatus === 'delivered', current: orderStatus === 'delivered', statusValue: 'delivered' }
   ]
 
   return (
@@ -257,7 +288,12 @@ export default function OrderDetail() {
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 font-ui text-[11px] uppercase tracking-wide">
             {steps.map((step, idx) => (
-              <div key={step.label} className="flex-1 flex items-center gap-3">
+              <div 
+                key={step.label} 
+                className="flex-1 flex items-center gap-3 cursor-pointer hover:opacity-75 transition-opacity"
+                onClick={() => handleStatusChange(step.statusValue)}
+                title={`Mark as ${step.label}`}
+              >
                 <div className="flex items-center gap-2">
                   <div
                     className={cn(
@@ -440,10 +476,17 @@ export default function OrderDetail() {
 
           {/* Production timeline logs card */}
           <Card className="bg-bg-surface border-border-default">
-            <CardHeader className="border-b border-border-subtle pb-3">
+            <CardHeader className="border-b border-border-subtle pb-3 flex flex-row items-center justify-between">
               <CardTitle className="text-xs uppercase font-ui tracking-wider text-text-secondary">
                 Production Timeline Stamps
               </CardTitle>
+              <Button
+                onClick={handleSaveDetails}
+                disabled={isSavingDetails}
+                className="h-7 bg-bg-surface hover:bg-bg-elevated border border-border-strong text-text-secondary hover:text-text-primary text-[10px] px-2"
+              >
+                <Save className="h-3 w-3 mr-1" /> Save Details
+              </Button>
             </CardHeader>
             <CardContent className="pt-4 grid grid-cols-2 gap-4 text-xs font-ui">
               <div>
@@ -493,13 +536,14 @@ export default function OrderDetail() {
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-text-secondary uppercase tracking-wider block">Delivered</span>
-                <span className="font-body text-text-primary font-medium">
-                  {selectedOrder.delivered_at ? (
-                    formatGST(selectedOrder.delivered_at, 'dd/MM/yyyy HH:mm')
-                  ) : (
-                    <span className="text-text-muted italic">In transit / Unshipped</span>
-                  )}
+                <span className="text-[10px] text-text-secondary uppercase tracking-wider block">Delivered On</span>
+                <span className="font-body text-text-primary font-medium mt-1 block">
+                  <Input 
+                    type="date" 
+                    className="h-7 text-[10px] bg-bg-input border-border-default max-w-[130px] font-body uppercase"
+                    value={deliveredDate}
+                    onChange={(e) => setDeliveredDate(e.target.value)}
+                  />
                 </span>
               </div>
             </CardContent>

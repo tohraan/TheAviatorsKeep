@@ -1,4 +1,5 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import AuthGuard from './components/shared/AuthGuard'
 import Layout from './components/shared/Layout'
 import Dashboard from './pages/Dashboard'
 import Leads from './pages/Leads'
@@ -8,6 +9,7 @@ import OrderDetail from './pages/OrderDetail'
 import Finance from './pages/Finance'
 import Content from './pages/Content'
 import Agency from './pages/Agency'
+import Inventory from './pages/Inventory'
 import Settings from './pages/Settings'
 
 const router = createBrowserRouter([
@@ -48,6 +50,10 @@ const router = createBrowserRouter([
         element: <Agency />,
       },
       {
+        path: '/inventory',
+        element: <Inventory />,
+      },
+      {
         path: '/settings',
         element: <Settings />,
       },
@@ -56,5 +62,9 @@ const router = createBrowserRouter([
 ])
 
 export default function App() {
-  return <RouterProvider router={router} />
+  return (
+    <AuthGuard>
+      <RouterProvider router={router} />
+    </AuthGuard>
+  )
 }

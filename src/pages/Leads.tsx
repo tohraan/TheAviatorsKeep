@@ -7,8 +7,6 @@ import {
   Plus,
   Kanban as KanbanIcon,
   List as ListIcon,
-  Phone,
-  MessageSquare,
   AlertTriangle,
   User,
   FilterX,
@@ -16,8 +14,8 @@ import {
   X
 } from 'lucide-react'
 import { useLeadsStore } from '@/stores/leadsStore'
-import { leadSchema, type LeadFormValues } from '@/lib/schemas'
-import type { Lead, FunnelStage, Priority, LeadSource } from '@/types'
+import { leadSchema } from '@/lib/schemas'
+import type { FunnelStage, Priority, LeadSource } from '@/types'
 import { formatLocalDate, cn } from '@/lib/utils'
 
 import { Button } from '@/components/ui/button'
@@ -77,7 +75,7 @@ export default function Leads() {
   const navigate = useNavigate()
   const { leads, loading, error, fetchLeads, addLead, updateLeadStage } = useLeadsStore()
 
-  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban')
+  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('list')
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [draggedOverStage, setDraggedOverStage] = useState<FunnelStage | null>(null)
 
@@ -97,7 +95,7 @@ export default function Leads() {
     control,
     reset,
     formState: { errors, isSubmitting }
-  } = useForm<LeadFormValues>({
+  } = useForm<any>({
     resolver: zodResolver(leadSchema),
     defaultValues: {
       name: '',
@@ -115,7 +113,7 @@ export default function Leads() {
     }
   })
 
-  const onSubmit = async (data: LeadFormValues) => {
+  const onSubmit = async (data: any) => {
     try {
       await addLead(data as any)
       reset()
@@ -522,8 +520,8 @@ export default function Leads() {
                 {...register('name')}
                 className="bg-bg-input border-border-default text-xs"
               />
-              {errors.name && (
-                <p className="text-status-red text-[11px] font-body mt-0.5">{errors.name.message}</p>
+              {errors.name?.message && (
+                <p className="text-status-red text-[11px] font-body mt-0.5">{String(errors.name.message)}</p>
               )}
             </div>
 
@@ -557,8 +555,8 @@ export default function Leads() {
                   </Select>
                 )}
               />
-              {errors.source && (
-                <p className="text-status-red text-[11px] font-body mt-0.5">{errors.source.message}</p>
+              {errors.source?.message && (
+                <p className="text-status-red text-[11px] font-body mt-0.5">{String(errors.source.message)}</p>
               )}
             </div>
 

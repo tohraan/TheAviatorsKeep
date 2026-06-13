@@ -58,7 +58,7 @@ export interface Lead {
   source_ad?: string | null
   source_detail?: string | null
   plane_interest?: string | null
-  frame_type?: 'standard' | 'custom' | null
+  frame_type?: 'standard' | 'custom' | 'other' | null
   notes?: string | null
   funnel_stage: FunnelStage
   priority: Priority
@@ -67,6 +67,7 @@ export interface Lead {
   last_contacted_at?: string | null
   has_order: boolean
   order_id?: string | null
+  orders?: Order[]
 }
 
 export interface LeadNote {
@@ -82,7 +83,7 @@ export interface Order {
   created_at: string
   updated_at: string
   lead_id?: string | null
-  frame_type: 'standard' | 'custom'
+  frame_type: 'standard' | 'custom' | 'other'
   airline: string
   plane_model?: string | null
   plaque_color?: string | null
@@ -152,4 +153,39 @@ export interface AnalyticsSession {
 export interface Setting {
   key: string
   value: string
+}
+
+export interface InventoryItem {
+  id: string
+  created_at: string
+  updated_at: string
+  item_key: string
+  item_name: string
+  unit: string
+  quantity: number
+  units_per_frame: number  // how many needed per completed frame (e.g. nails=3, drill=2)
+  min_threshold: number
+  cost_per_unit?: number | null
+  is_outsourced: boolean
+  notes?: string | null
+}
+
+export interface InventoryLog {
+  id: string
+  created_at: string
+  item_id: string
+  item_key: string
+  change: number       // positive = restock, negative = used
+  reason?: string | null
+  note?: string | null
+}
+
+export interface AirplaneModelStock {
+  id: string
+  created_at: string
+  updated_at: string
+  airline: string     // e.g. Emirates, Etihad, Qatar
+  model: string       // e.g. A380, B777, A350
+  quantity: number
+  notes?: string | null
 }

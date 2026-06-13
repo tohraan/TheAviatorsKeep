@@ -8,23 +8,20 @@ import {
   Phone,
   MessageCircle,
   Clock,
-  PlusCircle,
   FileText,
   Trash2,
   Edit,
   ExternalLink,
-  ChevronRight,
   AlertTriangle,
   Plane,
   Plus,
   Send,
-  HelpCircle,
   X
 } from 'lucide-react'
 import { useLeadsStore } from '@/stores/leadsStore'
 import { useOrdersStore } from '@/stores/ordersStore'
-import { leadSchema, orderSchema, type LeadFormValues, type OrderFormValues } from '@/lib/schemas'
-import type { Lead, LeadNote } from '@/types'
+import { leadSchema, orderSchema } from '@/lib/schemas'
+import type { LeadNote } from '@/types'
 import { formatGST, formatLocalDate, cn } from '@/lib/utils'
 
 import { Button } from '@/components/ui/button'
@@ -143,7 +140,7 @@ export default function LeadDetail() {
     control,
     reset,
     formState: { errors, isSubmitting }
-  } = useForm<LeadFormValues>({
+  } = useForm<any>({
     resolver: zodResolver(leadSchema),
   })
 
@@ -168,7 +165,7 @@ export default function LeadDetail() {
     }
   }
 
-  const onEditSubmit = async (data: LeadFormValues) => {
+  const onEditSubmit = async (data: any) => {
     if (id) {
       try {
         await updateLead(id, data as any)
@@ -187,7 +184,7 @@ export default function LeadDetail() {
     control: orderControl,
     reset: resetOrder,
     formState: { errors: orderErrors, isSubmitting: isOrderSubmitting }
-  } = useForm<OrderFormValues>({
+  } = useForm<any>({
     resolver: zodResolver(orderSchema),
   })
 
@@ -206,7 +203,7 @@ export default function LeadDetail() {
     }
   }
 
-  const onCreateOrderSubmit = async (data: OrderFormValues) => {
+  const onCreateOrderSubmit = async (data: any) => {
     if (id) {
       try {
         await addOrder(data as any, id)
@@ -357,21 +354,32 @@ export default function LeadDetail() {
             </DialogContent>
           </Dialog>
 
-          {/* Create Order Link */}
-          {selectedLead.has_order && selectedLead.order_id ? (
-            <Link to={`/orders/${selectedLead.order_id}`}>
-              <Button className="bg-status-green hover:bg-green-600 text-text-primary text-xs font-ui">
-                <ExternalLink className="h-4 w-4 mr-2" /> View Order
-              </Button>
-            </Link>
-          ) : (
+          {/* Orders List & Create Order */}
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {selectedLead.orders && selectedLead.orders.length > 0 ? (
+              selectedLead.orders.map((order) => (
+                <Link key={order.id} to={`/orders/${order.id}`}>
+                  <Button className="bg-status-green hover:bg-green-600 text-text-primary text-[10px] font-ui h-8 px-2">
+                    <ExternalLink className="h-3 w-3 mr-1" /> Order #{order.id.substring(0, 5)}
+                  </Button>
+                </Link>
+              ))
+            ) : selectedLead.has_order && selectedLead.order_id ? (
+              // Fallback for before we fetched the array
+              <Link to={`/orders/${selectedLead.order_id}`}>
+                <Button className="bg-status-green hover:bg-green-600 text-text-primary text-[10px] font-ui h-8 px-2">
+                  <ExternalLink className="h-3 w-3 mr-1" /> View Order
+                </Button>
+              </Link>
+            ) : null}
+
             <Button
               onClick={handleOpenCreateOrder}
-              className="bg-accent-primary hover:bg-accent-hover text-text-primary text-xs font-ui"
+              className="bg-accent-primary hover:bg-accent-hover text-text-primary text-[10px] font-ui h-8 px-2"
             >
-              <Plus className="h-4 w-4 mr-2" /> Create Order
+              <Plus className="h-3 w-3 mr-1" /> Add Order
             </Button>
-          )}
+          </div>
         </div>
       </div>
 
@@ -712,8 +720,8 @@ export default function LeadDetail() {
                 {...register('name')}
                 className="bg-bg-input border-border-default text-xs"
               />
-              {errors.name && (
-                <p className="text-status-red text-[11px] font-body mt-0.5">{errors.name.message}</p>
+              {errors.name?.message && (
+                <p className="text-status-red text-[11px] font-body mt-0.5">{String(errors.name.message)}</p>
               )}
             </div>
 
@@ -746,8 +754,8 @@ export default function LeadDetail() {
                   </Select>
                 )}
               />
-              {errors.source && (
-                <p className="text-status-red text-[11px] font-body mt-0.5">{errors.source.message}</p>
+              {errors.source?.message && (
+                <p className="text-status-red text-[11px] font-body mt-0.5">{String(errors.source.message)}</p>
               )}
             </div>
 
@@ -798,6 +806,7 @@ export default function LeadDetail() {
                         <SelectItem value="none">Not Sure Yet</SelectItem>
                         <SelectItem value="standard">Standard (249 AED)</SelectItem>
                         <SelectItem value="custom">Custom (300 AED)</SelectItem>
+                        <SelectItem value="other">Other (Custom Price)</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -909,8 +918,8 @@ export default function LeadDetail() {
                 {...registerOrder('airline')}
                 className="bg-bg-input border-border-default text-xs"
               />
-              {orderErrors.airline && (
-                <p className="text-status-red text-[11px] font-body mt-0.5">{orderErrors.airline.message}</p>
+              {orderErrors.airline?.message && (
+                <p className="text-status-red text-[11px] font-body mt-0.5">{String(orderErrors.airline.message)}</p>
               )}
             </div>
 
@@ -957,8 +966,10 @@ export default function LeadDetail() {
                     <Select
                       onValueChange={(val) => {
                         field.onChange(val)
-                        // Auto price sets
-                        setOrderValue('price_aed', val === 'custom' ? 300 : 249)
+                        // Auto price sets only if not 'other'
+                        if (val !== 'other') {
+                          setOrderValue('price_aed', val === 'custom' ? 300 : 249)
+                        }
                       }}
                       value={field.value}
                     >
@@ -968,6 +979,7 @@ export default function LeadDetail() {
                       <SelectContent className="bg-bg-elevated border-border-default text-text-primary">
                         <SelectItem value="standard">Standard (249 AED)</SelectItem>
                         <SelectItem value="custom">Custom (300 AED)</SelectItem>
+                        <SelectItem value="other">Other (Custom Price)</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -981,8 +993,8 @@ export default function LeadDetail() {
                   {...registerOrder('price_aed')}
                   className="bg-bg-input border-border-default text-xs font-semibold text-text-primary"
                 />
-                {orderErrors.price_aed && (
-                  <p className="text-status-red text-[11px] font-body mt-0.5">{orderErrors.price_aed.message}</p>
+                {orderErrors.price_aed?.message && (
+                  <p className="text-status-red text-[11px] font-body mt-0.5">{String(orderErrors.price_aed.message)}</p>
                 )}
               </div>
             </div>

@@ -25,8 +25,8 @@ import {
 } from 'recharts'
 import { useFinanceStore } from '@/stores/financeStore'
 import { useOrdersStore } from '@/stores/ordersStore'
-import { formatGST, formatLocalDate, cn } from '@/lib/utils'
-import type { Cost, CostCategory } from '@/types'
+import { formatLocalDate, cn } from '@/lib/utils'
+import type { CostCategory } from '@/types'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
 
 const COST_CATEGORIES: { value: CostCategory; label: string }[] = [
   { value: 'raw_materials', label: 'Raw Materials' },
@@ -60,16 +61,12 @@ const AD_PLATFORMS = [
 
 const costSchema = z.object({
   date: z.string().min(1, 'Date is required'),
-  category: z.enum(['raw_materials', 'consumables', 'ad_spend', 'shipping_error', 'waste', 'miscellaneous'], {
-    errorMap: () => ({ message: 'Please select a valid category' })
-  }),
+  category: z.enum(['raw_materials', 'consumables', 'ad_spend', 'shipping_error', 'waste', 'miscellaneous']),
   amount_aed: z.coerce.number().min(0.01, 'Amount must be greater than zero'),
   description: z.string().min(1, 'Description is required').max(200, 'Description too long'),
   ad_platform: z.string().optional().nullable().transform(val => val === 'none' || val === '' ? null : val),
   order_id: z.string().optional().nullable().transform(val => val === '' ? null : val)
 })
-
-type CostFormValues = z.infer<typeof costSchema>
 
 export default function Finance() {
   const { costs, loading: financeLoading, error: financeError, fetchCosts, addCost, deleteCost } = useFinanceStore()
@@ -91,7 +88,7 @@ export default function Finance() {
     watch,
     reset,
     formState: { errors, isSubmitting }
-  } = useForm<CostFormValues>({
+  } = useForm<any>({
     resolver: zodResolver(costSchema),
     defaultValues: {
       date: new Date().toISOString().split('T')[0],
@@ -105,7 +102,7 @@ export default function Finance() {
 
   const selectedCategory = watch('category')
 
-  const onSubmit = async (data: CostFormValues) => {
+  const onSubmit = async (data: any) => {
     try {
       await addCost(data as any)
       reset({
@@ -417,12 +414,12 @@ export default function Finance() {
                                 {c.category.replace('_', ' ')}
                               </Badge>
                               {c.ad_platform && (
-                                <span className="text-[9px] text-text-secondary block mt-0.5 uppercase tracking-wide">
+                <span className="text-[9px] text-text-secondary block mt-0.5 uppercase tracking-wide">
                                   ({c.ad_platform.replace('_', ' ')})
                                 </span>
                               )}
                             </td>
-                            <td className="p-3 max-w-[200px] truncate text-text-secondary" title={c.description}>
+                            <td className="p-3 max-w-[200px] truncate text-text-secondary" title={c.description || undefined}>
                               {c.description}
                               {c.order_id && (
                                 <span className="text-[9px] text-text-muted block mt-0.5 uppercase">
@@ -470,8 +467,8 @@ export default function Finance() {
                         {...register('date')}
                         className="bg-bg-input border-border-default text-xs text-text-primary cursor-pointer font-body"
                       />
-                      {errors.date && (
-                        <p className="text-status-red text-[11px] font-body mt-0.5">{errors.date.message}</p>
+                      {errors.date?.message && (
+                        <p className="text-status-red text-[11px] font-body mt-0.5">{String(errors.date.message)}</p>
                       )}
                     </div>
 
@@ -494,8 +491,8 @@ export default function Finance() {
                           </Select>
                         )}
                       />
-                      {errors.category && (
-                        <p className="text-status-red text-[11px] font-body mt-0.5">{errors.category.message}</p>
+                      {errors.category?.message && (
+                        <p className="text-status-red text-[11px] font-body mt-0.5">{String(errors.category.message)}</p>
                       )}
                     </div>
 
@@ -510,8 +507,8 @@ export default function Finance() {
                         {...register('amount_aed')}
                         className="bg-bg-input border-border-default text-xs font-body"
                       />
-                      {errors.amount_aed && (
-                        <p className="text-status-red text-[11px] font-body mt-0.5">{errors.amount_aed.message}</p>
+                      {errors.amount_aed?.message && (
+                        <p className="text-status-red text-[11px] font-body mt-0.5">{String(errors.amount_aed.message)}</p>
                       )}
                     </div>
 
@@ -559,8 +556,8 @@ export default function Finance() {
                         {...register('description')}
                         className="bg-bg-input border-border-default text-xs"
                       />
-                      {errors.description && (
-                        <p className="text-status-red text-[11px] font-body mt-0.5">{errors.description.message}</p>
+                      {errors.description?.message && (
+                        <p className="text-status-red text-[11px] font-body mt-0.5">{String(errors.description.message)}</p>
                       )}
                     </div>
 

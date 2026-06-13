@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { useOrdersStore } from '@/stores/ordersStore'
 import { formatGST, formatLocalDate, cn } from '@/lib/utils'
-import { OrderStatus } from '@/types'
+import type { OrderStatus } from '@/types'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

@@ -3,30 +3,24 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { startOfWeek, addDays, format, parseISO } from 'date-fns'
+import { useNavigate, Link } from 'react-router-dom'
 import {
-  Calendar as CalendarIcon,
   Plus,
   Trash2,
   AlertTriangle,
   Megaphone,
   FilterX,
-  Instagram,
-  Facebook,
   Wand2,
-  FileEdit,
-  CheckCircle,
-  HelpCircle
+  X
 } from 'lucide-react'
 import { useContentStore } from '@/stores/contentStore'
-import { formatGST, formatLocalDate, cn } from '@/lib/utils'
-import type { Post, PostPlatform, PostStatus } from '@/types'
+import { formatLocalDate, cn } from '@/lib/utils'
+import type { PostPlatform, PostStatus } from '@/types'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -42,6 +36,21 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
+
+// SVG Icons for platforms
+const InstagramIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+  </svg>
+)
+
+const FacebookIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+  </svg>
+)
 
 const PLATFORMS: { value: PostPlatform; label: string }[] = [
   { value: 'instagram', label: 'Instagram' },
@@ -67,9 +76,7 @@ const CONTENT_TYPES = [
 
 const postSchema = z.object({
   date: z.string().min(1, 'Date is required'),
-  platform: z.enum(['instagram', 'facebook_page', 'facebook_marketplace', 'both'], {
-    errorMap: () => ({ message: 'Please select a platform' })
-  }),
+  platform: z.enum(['instagram', 'facebook_page', 'facebook_marketplace', 'both']),
   content_type: z.enum(['carousel', 'single_image', 'reel', 'story', 'listing']).optional().nullable(),
   caption: z.string().optional().nullable().transform(val => val === '' ? null : val),
   image_notes: z.string().optional().nullable().transform(val => val === '' ? null : val),
@@ -79,9 +86,8 @@ const postSchema = z.object({
   performance_notes: z.string().optional().nullable().transform(val => val === '' ? null : val)
 })
 
-type PostFormValues = z.infer<typeof postSchema>
-
 export default function Content() {
+  const navigate = useNavigate()
   const { posts, loading, error, fetchPosts, addPost, updatePost, deletePost } = useContentStore()
 
   const [isSheetOpen, setIsSheetOpen] = useState(false)
@@ -100,7 +106,7 @@ export default function Content() {
     watch,
     reset,
     formState: { errors, isSubmitting }
-  } = useForm<PostFormValues>({
+  } = useForm<any>({
     resolver: zodResolver(postSchema),
     defaultValues: {
       date: new Date().toISOString().split('T')[0],
@@ -117,7 +123,7 @@ export default function Content() {
 
   const isBoosted = watch('boosted')
 
-  const onSubmit = async (data: PostFormValues) => {
+  const onSubmit = async (data: any) => {
     try {
       await addPost(data as any)
       reset({
@@ -157,12 +163,12 @@ export default function Content() {
   }
 
   const getPlatformIcon = (platform: PostPlatform) => {
-    if (platform === 'instagram') return <Instagram className="h-4.5 w-4.5 text-status-purple" />
-    if (platform === 'facebook_page' || platform === 'facebook_marketplace') return <Facebook className="h-4.5 w-4.5 text-status-blue" />
+    if (platform === 'instagram') return <InstagramIcon className="h-4 w-4 text-status-purple" />
+    if (platform === 'facebook_page' || platform === 'facebook_marketplace') return <FacebookIcon className="h-4 w-4 text-status-blue" />
     return (
       <div className="flex -space-x-1">
-        <Instagram className="h-3.5 w-3.5 text-status-purple" />
-        <Facebook className="h-3.5 w-3.5 text-status-blue" />
+        <InstagramIcon className="h-3.5 w-3.5 text-status-purple" />
+        <FacebookIcon className="h-3.5 w-3.5 text-status-blue" />
       </div>
     )
   }
@@ -450,8 +456,8 @@ export default function Content() {
                 {...register('date')}
                 className="bg-bg-input border-border-default text-xs text-text-primary cursor-pointer font-body"
               />
-              {errors.date && (
-                <p className="text-status-red text-[11px] font-body mt-0.5">{errors.date.message}</p>
+              {errors.date?.message && (
+                <p className="text-status-red text-[11px] font-body mt-0.5">{String(errors.date.message)}</p>
               )}
             </div>
 
@@ -475,8 +481,8 @@ export default function Content() {
                     </Select>
                   )}
                 />
-                {errors.platform && (
-                  <p className="text-status-red text-[11px] font-body mt-0.5">{errors.platform.message}</p>
+                {errors.platform?.message && (
+                  <p className="text-status-red text-[11px] font-body mt-0.5">{String(errors.platform.message)}</p>
                 )}
               </div>
               <div className="space-y-1">

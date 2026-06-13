@@ -31,7 +31,7 @@ interface OrdersState {
     isPaid: boolean,
     shippingFee?: number | null
   ) => Promise<void>
-  toggleMaterialStock: (orderId: string, materialId: string, inStock: boolean) => Promise<void>
+  toggleMaterialStock: (_orderId: string, materialId: string, inStock: boolean) => Promise<void>
   clearError: () => void
 }
 
@@ -48,7 +48,7 @@ export const useOrdersStore = create<OrdersState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('*, lead:leads(name), materials:order_materials(in_stock)')
+        .select('*, lead:leads!lead_id(name), materials:order_materials(in_stock)')
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -65,7 +65,7 @@ export const useOrdersStore = create<OrdersState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('*, lead:leads(*), materials:order_materials(*)')
+        .select('*, lead:leads!lead_id(*), materials:order_materials(*)')
         .eq('id', id)
         .single()
 
@@ -149,7 +149,7 @@ export const useOrdersStore = create<OrdersState>((set, get) => ({
       // Refresh orders list
       const { data: listData } = await supabase
         .from('orders')
-        .select('*, lead:leads(name)')
+        .select('*, lead:leads!lead_id(name)')
         .order('created_at', { ascending: false })
 
       set({ orders: (listData as any) || [], loading: false })
@@ -182,7 +182,7 @@ export const useOrdersStore = create<OrdersState>((set, get) => ({
       // Refresh list
       const { data } = await supabase
         .from('orders')
-        .select('*, lead:leads(name)')
+        .select('*, lead:leads!lead_id(name)')
         .order('created_at', { ascending: false })
 
       set({ orders: (data as any) || [] })
@@ -331,7 +331,7 @@ export const useOrdersStore = create<OrdersState>((set, get) => ({
     }
   },
 
-  toggleMaterialStock: async (orderId, materialId, inStock) => {
+  toggleMaterialStock: async (_orderId, materialId, inStock) => {
     const previousOrder = get().selectedOrder
     if (!previousOrder) return
 

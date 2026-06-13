@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 import {
   Home,
   Users,
   Package,
+  Layers,
   Coins,
   Calendar,
   Cpu,
@@ -28,6 +30,7 @@ export default function Layout() {
     { name: 'Dashboard', path: '/', icon: Home },
     { name: 'Leads', path: '/leads', icon: Users },
     { name: 'Orders', path: '/orders', icon: Package },
+    { name: 'Inventory', path: '/inventory', icon: Layers },
     { name: 'Finance', path: '/finance', icon: Coins },
     { name: 'Content', path: '/content', icon: Calendar },
     { name: 'Agency', path: '/content/agency', icon: Cpu },
@@ -93,6 +96,22 @@ export default function Layout() {
             )
           })}
         </nav>
+
+        {/* Sign Out */}
+        <div className="px-2 pb-4">
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className={cn(
+              "flex items-center w-full rounded-md px-3 py-2 text-sm font-ui transition-colors text-text-muted hover:bg-bg-elevated hover:text-status-red",
+            )}
+            title="Sign Out"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
+            </svg>
+            {isExpanded && <span className="ml-3">Sign Out</span>}
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}

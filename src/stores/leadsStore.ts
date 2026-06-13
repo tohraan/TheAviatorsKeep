@@ -53,7 +53,7 @@ export const useLeadsStore = create<LeadsState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('leads')
-        .select('*')
+        .select('*, orders!lead_id(*)')
         .eq('id', id)
         .single()
 
@@ -163,6 +163,31 @@ export const useLeadsStore = create<LeadsState>((set, get) => ({
         }])
         .select()
         .single()
+
+      // 4. Sync Order status for any associated orders
+      let orderStage: string | null = null
+      if (stage === 'booking_paid') orderStage = 'booking_confirmed'
+      else if (stage === 'in_production') orderStage = 'in_production'
+      else if (stage === 'ready_pending') orderStage = 'ready'
+      else if (stage === 'shipping_paid') orderStage = 'shipped'
+      else if (stage === 'delivered') orderStage = 'delivered'
+      else if (stage === 'lost') orderStage = 'cancelled'
+
+      if (orderStage) {
+        // Also update the timestamps based on the status
+        const timestampUpdates: any = { order_status: orderStage }
+        const now = new Date().toISOString()
+        
+        if (orderStage === 'in_production') timestampUpdates.production_started_at = now
+        else if (orderStage === 'ready') timestampUpdates.production_completed_at = now
+        else if (orderStage === 'shipped') timestampUpdates.shipped_at = now
+        else if (orderStage === 'delivered') timestampUpdates.delivered_at = now
+
+        await supabase
+          .from('orders')
+          .update(timestampUpdates)
+          .eq('lead_id', id)
+      }
 
       if (!noteError && noteData && get().selectedLead?.id === id) {
         set((state) => ({ notes: [noteData, ...state.notes] }))

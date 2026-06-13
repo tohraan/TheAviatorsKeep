@@ -9,7 +9,7 @@ export const leadSchema = z.object({
   source_ad: z.string().optional().nullable().transform(val => val === '' ? null : val),
   source_detail: z.string().optional().nullable().transform(val => val === '' ? null : val),
   plane_interest: z.string().optional().nullable().transform(val => val === '' ? null : val),
-  frame_type: z.enum(['standard', 'custom']).optional().nullable().transform(val => val === '' ? null : val),
+  frame_type: z.enum(['standard', 'custom', 'other']).optional().nullable().transform(val => val === '' ? null : val),
   notes: z.string().optional().nullable().transform(val => val === '' ? null : val),
   funnel_stage: z.enum([
     'inquiry',
@@ -33,7 +33,7 @@ export type LeadFormValues = z.infer<typeof leadSchema>
 
 export const orderSchema = z.object({
   lead_id: z.string().optional().nullable(),
-  frame_type: z.enum(['standard', 'custom'], {
+  frame_type: z.enum(['standard', 'custom', 'other'], {
     errorMap: () => ({ message: 'Please select a frame variant' })
   }),
   airline: z.string().min(1, 'Airline is required'),
