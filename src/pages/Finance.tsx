@@ -6,9 +6,7 @@ import {
   TrendingUp,
   Coins,
   AlertTriangle,
-  Plus,
   Trash2,
-  Calendar as CalendarIcon,
   FilterX,
   CreditCard,
   DollarSign

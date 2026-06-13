@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { startOfWeek, addDays, format, parseISO } from 'date-fns'
+import { startOfWeek, addDays, format } from 'date-fns'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   Plus,
@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Card } from '@/components/ui/card'
 import {
   Select,
   SelectContent,

@@ -1,25 +1,14 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import {
   ArrowLeft,
-  Package,
-  User,
   AlertTriangle,
-  Coins,
-  CheckCircle,
-  Truck,
-  Layers,
   Check,
-  MapPin,
-  ExternalLink,
-  Edit2,
-  Calendar,
   Save,
-  HelpCircle,
   ChevronRight
 } from 'lucide-react'
 import { useOrdersStore } from '@/stores/ordersStore'
-import { formatGST, formatLocalDate, cn } from '@/lib/utils'
+import { formatGST, cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import type { OrderStatus, Material } from '@/types'
 
@@ -58,7 +47,7 @@ const MATERIAL_LABELS: Record<Material, string> = {
 
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+
   const {
     selectedOrder,
     loading,

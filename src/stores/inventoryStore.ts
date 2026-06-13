@@ -37,7 +37,7 @@ function computeDerived(items: InventoryItem[]) {
       : i.quantity
     return framesFromItem <= i.min_threshold
   })
-  const bottlenecks = items.filter((i, idx) => frameCapacities[idx] === maxFrames)
+  const bottlenecks = items.filter((_, idx) => frameCapacities[idx] === maxFrames)
   return { maxFrames, lowStockItems, bottlenecks }
 }
 

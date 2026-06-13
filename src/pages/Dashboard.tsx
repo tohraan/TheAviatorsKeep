@@ -121,6 +121,7 @@ function KpiCard({
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     revenueThisMonth: 0,
+    allTimeRevenue: 0,
     activeLeads: 0,
     inProductionOrders: 0,
     followUpsDue: 0,
