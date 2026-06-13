@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import AuthGuard from './components/shared/AuthGuard'
 import Layout from './components/shared/Layout'
 import Dashboard from './pages/Dashboard'
@@ -49,6 +49,10 @@ const router = createBrowserRouter([
       {
         path: '/content',
         element: <Content />,
+      },
+      {
+        path: '/content/agency',
+        element: <Navigate to="/agency" replace />,
       },
       {
         path: '/agency',
