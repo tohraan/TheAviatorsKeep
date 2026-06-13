@@ -1,10 +1,9 @@
-import { getAgencyModel } from '../lib/gemini'
+import { callOpenRouter } from '../lib/openrouter'
 import { getAgentSOP } from '../lib/sopLoader'
 import type { AdsSession } from '../types/agency.types'
 
 export async function runPaidMediaManagerAgent(session: AdsSession) {
   const sop = await getAgentSOP('paid_media_manager')
-  const model = getAgencyModel()
 
   const systemInstruction = `
     You are the Paid Media Manager at SkyFrame Media Agency.
@@ -42,14 +41,9 @@ export async function runPaidMediaManagerAgent(session: AdsSession) {
   `
 
   try {
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      systemInstruction,
-    })
-
-    const responseText = result.response.text()
-    return JSON.parse(responseText)
+    const result = await callOpenRouter(systemInstruction, prompt)
+    return result
   } catch (error: any) {
-    throw new Error(`Paid Media Manager Agent failed: ${error.message}`)
+    throw new Error(`Paid Media Manager failed: ${error.message}`)
   }
 }

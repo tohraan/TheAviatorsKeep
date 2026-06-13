@@ -1,10 +1,9 @@
-import { getAgencyModel } from '../lib/gemini'
+import { callOpenRouter } from '../lib/openrouter'
 import { getAgentSOP } from '../lib/sopLoader'
 import type { ContentSession } from '../types/agency.types'
 
 export async function runReelAgent(session: ContentSession) {
   const sop = await getAgentSOP('reel_agent')
-  const model = getAgencyModel()
 
   const systemInstruction = `
     You are the Reel Agent at SkyFrame Media Agency.
@@ -42,13 +41,8 @@ export async function runReelAgent(session: ContentSession) {
   `
 
   try {
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      systemInstruction,
-    })
-
-    const responseText = result.response.text()
-    return JSON.parse(responseText)
+    const result = await callOpenRouter(systemInstruction, prompt)
+    return result
   } catch (error: any) {
     throw new Error(`Reel Agent failed: ${error.message}`)
   }

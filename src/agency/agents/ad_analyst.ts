@@ -1,12 +1,9 @@
-import { getAgencyModel } from '../lib/gemini'
+import { callOpenRouter } from '../lib/openrouter'
 import { getAgentSOP } from '../lib/sopLoader'
-import { supabase } from '../../lib/supabase'
 import type { AdsSession } from '../types/agency.types'
-import type { Part } from '@google/generative-ai'
 
 export async function runAdAnalystAgent(session: AdsSession) {
   const sop = await getAgentSOP('ad_analyst')
-  const model = getAgencyModel()
 
   const systemInstruction = `
     You are the Ad Analyst at SkyFrame Media Agency.
@@ -31,7 +28,7 @@ export async function runAdAnalystAgent(session: AdsSession) {
     ${sop.output_format}
   `
 
-  const promptText = `
+  let promptText = `
     Please extract and analyze the performance metrics from the provided data.
     
     TEXT CONTEXT:
@@ -40,48 +37,14 @@ export async function runAdAnalystAgent(session: AdsSession) {
     Please provide your analysis as a valid JSON object matching the requested output format.
   `
 
-  const parts: Part[] = [{ text: promptText }]
-
-  // Add screenshots to context if available
+  // Llama 3.3 70B is a text-only model. We simply inform it if screenshots were uploaded.
   if (session.screenshot_urls && session.screenshot_urls.length > 0) {
-    for (const path of session.screenshot_urls) {
-      try {
-        const { data } = await supabase.storage.from('agency-uploads').download(path)
-        if (data) {
-          const base64 = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader()
-            reader.onloadend = () => {
-              if (reader.result) {
-                resolve((reader.result as string).split(',')[1])
-              } else {
-                reject(new Error('Failed to convert image to base64'))
-              }
-            }
-            reader.onerror = reject
-            reader.readAsDataURL(data)
-          })
-
-          parts.push({
-            inlineData: {
-              data: base64,
-              mimeType: data.type
-            }
-          })
-        }
-      } catch (err) {
-        console.error('Failed to load screenshot:', err)
-      }
-    }
+    promptText += `\n[Note: The user uploaded ${session.screenshot_urls.length} screenshot(s), but as a text-only analyst, you cannot view them. Rely heavily on the TEXT CONTEXT above.]`
   }
 
   try {
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts }],
-      systemInstruction,
-    })
-
-    const responseText = result.response.text()
-    return JSON.parse(responseText)
+    const result = await callOpenRouter(systemInstruction, promptText)
+    return result
   } catch (error: any) {
     throw new Error(`Ad Analyst Agent failed: ${error.message}`)
   }
