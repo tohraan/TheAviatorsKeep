@@ -126,7 +126,10 @@ export default function ContentSessionDetail() {
                   <XCircle className="h-4 w-4" /> Pipeline execution failed. See logs for details.
                 </div>
                 <Button 
-                  onClick={() => startContentSession(session.id)}
+                  onClick={() => {
+                    setSession({ ...session, status: 'running' })
+                    startContentSession(session.id)
+                  }}
                   className="bg-status-purple hover:bg-status-purple/90 text-white font-ui text-xs"
                 >
                   Retry Pipeline

@@ -124,7 +124,10 @@ export default function AdsSessionDetail() {
                   <XCircle className="h-4 w-4" /> Pipeline execution failed. See logs for details.
                 </div>
                 <Button 
-                  onClick={() => startAdsSession(session.id)}
+                  onClick={() => {
+                    setSession({ ...session, status: 'running' })
+                    startAdsSession(session.id)
+                  }}
                   className="bg-status-purple hover:bg-status-purple/90 text-white font-ui text-xs"
                 >
                   Retry Pipeline
