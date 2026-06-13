@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useAgencyStore } from '../store/agencyStore'
 import { supabase } from '../../lib/supabase'
 import type { ContentSession } from '../types/agency.types'
 import { OutputCard } from '../components/OutputCard'
@@ -12,6 +13,7 @@ import { formatLocalDate } from '../../lib/utils'
 export default function ContentSessionDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { startContentSession } = useAgencyStore()
   const [session, setSession] = useState<ContentSession | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -119,8 +121,16 @@ export default function ContentSessionDetail() {
               ))}
             </div>
             {session.status === 'failed' && (
-              <div className="mt-6 p-3 bg-status-red/10 border border-status-red/20 rounded text-status-red text-xs font-body flex items-center gap-2">
-                <XCircle className="h-4 w-4" /> Pipeline execution failed. See logs for details.
+              <div className="mt-6 flex flex-col items-start gap-4">
+                <div className="p-3 bg-status-red/10 border border-status-red/20 rounded text-status-red text-xs font-body flex items-center w-full gap-2">
+                  <XCircle className="h-4 w-4" /> Pipeline execution failed. See logs for details.
+                </div>
+                <Button 
+                  onClick={() => startContentSession(session.id)}
+                  className="bg-status-purple hover:bg-status-purple/90 text-white font-ui text-xs"
+                >
+                  Retry Pipeline
+                </Button>
               </div>
             )}
           </CardContent>
