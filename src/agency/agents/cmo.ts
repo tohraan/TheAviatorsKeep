@@ -52,7 +52,7 @@ export async function runCMOAgent(session: ContentSession) {
     if (session.screenshot_urls && session.screenshot_urls.length > 0) {
       for (const path of session.screenshot_urls) {
         try {
-          const { data, error } = await supabase.storage.from('agency-uploads').download(path)
+          const { data } = await supabase.storage.from('agency-uploads').download(path)
           if (data) {
             const base64 = await new Promise<string>((resolve, reject) => {
               const reader = new FileReader()
